@@ -2,8 +2,8 @@ from django.db import models
 
 class Products(models.Model):
     UNIVERSE_CHOICES = (
-        ('SW', 'Star Wars'),
-        ('RE', 'Resident Evil'),
+        ('Star Wars', 'Star Wars'),
+        ('Residen Evil', 'Resident Evil'),
         ('LOTR', 'Lord Of The Rings'),
         ('Other', 'Other')
     )
