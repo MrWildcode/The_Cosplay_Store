@@ -11,7 +11,7 @@ from store.serializers import ProductsSerializer
 class ProductsAPITestCase(APITestCase):
     def setUp(self):
         self.product1 = Products.objects.create(name='testproduct1', price=500, universe='Star Wars')
-        self.product2 = Products.objects.create(name='testproduct2', price=800, universe='LOTR')
+        self.product2 = Products.objects.create(name='testproduct2', price=900, universe='LOTR')
         self.product3 = Products.objects.create(name='Something from Star Wars', price=800, universe='Other')
 
     def test_get(self):
@@ -34,6 +34,14 @@ class ProductsAPITestCase(APITestCase):
         expected_data = ProductsSerializer([self.product1, self.product3], many=True).data
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, expected_data)
+
+    def test_get_ordering(self):
+        url = reverse('products-list')
+        response = self.client.get(url, data={'ordering': 'price'})
+        expected_data = ProductsSerializer([self.product1, self.product3, self.product2], many=True).data
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, expected_data)
+
 
     def test_create(self):
         url = reverse('products-list')
