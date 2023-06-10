@@ -42,7 +42,6 @@ class ProductsAPITestCase(APITestCase):
                 'universe': 'Resident Evil'}
         json_data = json.dumps(data)
         response = self.client.post(url, json_data, content_type='application/json')
-        print(response.status_code)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_update(self):
@@ -57,9 +56,11 @@ class ProductsAPITestCase(APITestCase):
         self.assertEqual(data['price'], str(self.product1.price))
 
     def test_delete(self):
-        url = reverse('products-detail', args=(self.product2))
+        url = reverse('products-detail', args=(self.product2.id,))
+        self.assertTrue(Products.objects.get(id=self.product2.id))
+        self.assertEqual(3, Products.objects.count())
         response = self.client.delete(url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(2, Products.objects.count())
 
 
