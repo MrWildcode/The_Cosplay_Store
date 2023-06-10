@@ -21,6 +21,4 @@ class ProductsSerializerTestCase(APITestCase):
              'price': '800.00',
              'universe': 'LOTR'},
             ]
-        print(f'DATA {data}')
-        print(f'EXPECTED_DATA {expected_data}')
         self.assertEqual(expected_data, data)
