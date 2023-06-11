@@ -1,5 +1,6 @@
 import json
 
+from django.contrib.auth.models import User
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -13,6 +14,8 @@ class ProductsAPITestCase(APITestCase):
         self.product1 = Products.objects.create(name='testproduct1', price=500, universe='Star Wars')
         self.product2 = Products.objects.create(name='testproduct2', price=900, universe='LOTR')
         self.product3 = Products.objects.create(name='Something from Star Wars', price=800, universe='Other')
+
+        self.user1 = User.objects.create(username='testuser1')
 
     def test_get(self):
         url = reverse('products-list')
@@ -49,6 +52,7 @@ class ProductsAPITestCase(APITestCase):
                 'price': '350',
                 'universe': 'Resident Evil'}
         json_data = json.dumps(data)
+        self.client.force_login(self.user1)
         response = self.client.post(url, json_data, content_type='application/json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
@@ -58,6 +62,7 @@ class ProductsAPITestCase(APITestCase):
                 'price': '650.00',
                 'universe': self.product1.universe}
         json_data = json.dumps(data)
+        self.client.force_login(self.user1)
         response = self.client.put(url, json_data, content_type='application/json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.product1.refresh_from_db()
@@ -67,6 +72,7 @@ class ProductsAPITestCase(APITestCase):
         url = reverse('products-detail', args=(self.product2.id,))
         self.assertTrue(Products.objects.get(id=self.product2.id))
         self.assertEqual(3, Products.objects.count())
+        self.client.force_login(self.user1)
         response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(2, Products.objects.count())

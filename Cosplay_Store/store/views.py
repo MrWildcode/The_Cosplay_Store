@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from rest_framework.filters import SearchFilter, OrderingFilter
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.viewsets import ModelViewSet
 
 from store.models import Products
@@ -14,6 +15,12 @@ class ProductsViewSet(ModelViewSet):
     filterset_fields = ['universe']
     search_fields = ['name', 'universe']
     ordering_fields = ['price', 'universe']
+
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+def oauth(request):
+    return render(request, 'oauth.html')
+
 
 
 
