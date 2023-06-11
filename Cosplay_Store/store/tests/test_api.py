@@ -11,11 +11,17 @@ from store.serializers import ProductsSerializer
 
 class ProductsAPITestCase(APITestCase):
     def setUp(self):
-        self.product1 = Products.objects.create(name='testproduct1', price=500, universe='Star Wars')
-        self.product2 = Products.objects.create(name='testproduct2', price=900, universe='LOTR')
-        self.product3 = Products.objects.create(name='Something from Star Wars', price=800, universe='Other')
-
         self.user1 = User.objects.create(username='testuser1')
+        self.user2 = User.objects.create(username='testuser2')
+        self.user3 = User.objects.create(username='testuser3', is_staff=True)
+
+        self.product1 = Products.objects.create(name='testproduct1', price=500, universe='Star Wars',
+                                                owner=self.user1)
+        self.product2 = Products.objects.create(name='testproduct2', price=900, universe='LOTR',
+                                                owner=self.user1)
+        self.product3 = Products.objects.create(name='Something from Star Wars', price=800, universe='Other',
+                                                owner=self.user2)
+
 
     def test_get(self):
         url = reverse('products-list')
@@ -55,6 +61,7 @@ class ProductsAPITestCase(APITestCase):
         self.client.force_login(self.user1)
         response = self.client.post(url, json_data, content_type='application/json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Products.objects.last().owner, self.user1)
 
     def test_update(self):
         url = reverse('products-detail', args=(self.product1.id,))
@@ -63,6 +70,41 @@ class ProductsAPITestCase(APITestCase):
                 'universe': self.product1.universe}
         json_data = json.dumps(data)
         self.client.force_login(self.user1)
+        response = self.client.put(url, json_data, content_type='application/json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.product1.refresh_from_db()
+        self.assertEqual(data['price'], str(self.product1.price))
+
+    def test_update_not_authenticated(self):
+        url = reverse('products-detail', args=(self.product1.id,))
+        data = {'name': self.product1.name,
+                'price': '650.00',
+                'universe': self.product1.universe}
+        json_data = json.dumps(data)
+        response = self.client.put(url, json_data, content_type='application/json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.product1.refresh_from_db()
+        self.assertEqual(Products.objects.get(id=self.product1.id).price, self.product1.price)
+
+    def test_update_not_owner(self):
+        url = reverse('products-detail', args=(self.product1.id,))
+        data = {'name': self.product1.name,
+                'price': '650.00',
+                'universe': self.product1.universe}
+        json_data = json.dumps(data)
+        self.client.force_login(self.user2)
+        response = self.client.put(url, json_data, content_type='application/json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.product1.refresh_from_db()
+        self.assertEqual(Products.objects.get(id=self.product1.id).price, self.product1.price)
+
+    def test_update_not_owner_but_staff(self):
+        url = reverse('products-detail', args=(self.product1.id,))
+        data = {'name': self.product1.name,
+                'price': '650.00',
+                'universe': self.product1.universe}
+        json_data = json.dumps(data)
+        self.client.force_login(self.user3)
         response = self.client.put(url, json_data, content_type='application/json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.product1.refresh_from_db()
