@@ -2,14 +2,14 @@ from django.db.models import Count, Case, When, Avg
 from django.shortcuts import render
 from rest_framework import mixins
 from rest_framework.filters import SearchFilter, OrderingFilter
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import ModelViewSet, GenericViewSet
 
 from store.models import Products, UserProductRelation
 from store.serializers import ProductsSerializer, UserProductRelationSerializer
 from django_filters.rest_framework import DjangoFilterBackend
 
-from store.tests.permissions import IsOwnerOrStaffOrReadOnly
+from store.permissions import IsOwnerOrStaffOrReadOnly
 
 
 class ProductsViewSet(ModelViewSet):
