@@ -15,6 +15,7 @@ class Products(models.Model):
                               related_name='my_products')
     watchers = models.ManyToManyField(User, through='UserProductRelation',
                                       related_name='products')
+    rating = models.DecimalField(max_digits=3, decimal_places=2, default=None, null=True)
 
     def __str__(self):
         return f'ID {self.id}: {self.name}'
@@ -34,5 +35,11 @@ class UserProductRelation(models.Model):
     like = models.BooleanField(default=False)
     in_cart = models.BooleanField(default=False)
 
+    def save(self, *args, **kwargs):
+        from store.rating_logic import set_rating
+        super().save(*args, **kwargs)
+        set_rating(self.product)
+
     def __str__(self):
         return f'{self.user.username}: {self.product.name}, RATE {self.rate}'
+

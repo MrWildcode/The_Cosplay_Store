@@ -33,8 +33,7 @@ class ProductsAPITestCase(APITestCase):
             response = self.client.get(url)
             self.assertEqual(2, len(queries))
         products = Products.objects.all().annotate(
-        likes_count=Count(Case(When(userproductrelation__like=True, then=1))),
-        rating=Avg('userproductrelation__rate')).order_by('id')
+        likes_count=Count(Case(When(userproductrelation__like=True, then=1)))).order_by('id')
         expected_data = ProductsSerializer(products, many=True).data
         self.assertEqual(response.data, expected_data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -45,8 +44,7 @@ class ProductsAPITestCase(APITestCase):
         url = reverse('products-list')
         response = self.client.get(url, data={'universe': 'LOTR'})
         products = Products.objects.filter(id__in=[self.product2.id]).annotate(
-            likes_count=Count(Case(When(userproductrelation__like=True, then=1))),
-            rating=Avg('userproductrelation__rate')).order_by('id')
+            likes_count=Count(Case(When(userproductrelation__like=True, then=1)))).order_by('id')
         expected_data = ProductsSerializer(products, many=True).data
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, expected_data)
@@ -55,8 +53,7 @@ class ProductsAPITestCase(APITestCase):
         url = reverse('products-list')
         response = self.client.get(url, data={'search': 'Star Wars'})
         products = Products.objects.filter(id__in=[self.product1.id, self.product3.id]).annotate(
-            likes_count=Count(Case(When(userproductrelation__like=True, then=1))),
-            rating=Avg('userproductrelation__rate')).order_by('id')
+            likes_count=Count(Case(When(userproductrelation__like=True, then=1)))).order_by('id')
         expected_data = ProductsSerializer(products, many=True).data
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, expected_data)
@@ -65,8 +62,7 @@ class ProductsAPITestCase(APITestCase):
         url = reverse('products-list')
         response = self.client.get(url, data={'ordering': 'price'})
         products = Products.objects.all().annotate(
-            likes_count=Count(Case(When(userproductrelation__like=True, then=1))),
-            rating=Avg('userproductrelation__rate')).order_by('price')
+            likes_count=Count(Case(When(userproductrelation__like=True, then=1)))).order_by('price')
         expected_data = ProductsSerializer(products, many=True).data
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, expected_data)

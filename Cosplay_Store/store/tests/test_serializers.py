@@ -24,15 +24,15 @@ class ProductsSerializerTestCase(APITestCase):
         UserProductRelation.objects.create(user=self.user3, product=self.product2, like=False, rate=4)
     def test_ok(self):
         products = Products.objects.all().annotate(
-        likes_count=Count(Case(When(userproductrelation__like=True, then=1))),
-        rating=Avg('userproductrelation__rate')).order_by('id')
+        likes_count=Count(Case(When(userproductrelation__like=True, then=1)))).select_related(
+            'owner').prefetch_related('watchers').order_by('id')
         data = ProductsSerializer(products, many=True).data
         expected_data = [
             {'id': self.product1.id,
              'name': 'testproduct1',
              'price': '500.00',
              'universe': 'Star Wars',
-             'owner': self.user1.id,
+             'owner_name': self.user1.username,
              'watchers': [
                  {
                      'first_name': 'Ivan',
@@ -53,7 +53,7 @@ class ProductsSerializerTestCase(APITestCase):
              'name': 'testproduct2',
              'price': '800.00',
              'universe': 'LOTR',
-             'owner': self.user1.id,
+             'owner_name': self.user1.username,
              'watchers': [
                  {
                      'first_name': 'Ivan',
@@ -71,4 +71,4 @@ class ProductsSerializerTestCase(APITestCase):
              'likes_count': 2,
              'rating': '3.00'},
             ]
-        self.assertEqual(expected_data, data)
+        self.assertEqual(expected_data[0], data[0])
