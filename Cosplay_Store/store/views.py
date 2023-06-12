@@ -15,7 +15,8 @@ from store.tests.permissions import IsOwnerOrStaffOrReadOnly
 class ProductsViewSet(ModelViewSet):
     queryset = Products.objects.all().annotate(
         likes_count=Count(Case(When(userproductrelation__like=True, then=1))),
-        rating=Avg('userproductrelation__rate')).order_by('id')
+        rating=Avg('userproductrelation__rate')).select_related(
+        'owner').prefetch_related('watchers').order_by('id')
 
     serializer_class = ProductsSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]

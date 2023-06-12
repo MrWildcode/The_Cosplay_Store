@@ -13,7 +13,8 @@ router.register(r'product_relation', UserProductRelationViewSet)
 urlpatterns = [
     path('admin/', admin.site.urls),
     re_path('', include('social_django.urls', namespace='social')),
-    path('auth/', oauth)
+    path('auth/', oauth),
+    path("__debug__/", include("debug_toolbar.urls"))
 ]
 
 urlpatterns += router.urls
