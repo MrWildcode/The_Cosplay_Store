@@ -1,6 +1,7 @@
 import json
 
 from django.contrib.auth.models import User
+from django.db.models import Count, Case, When, Avg
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -22,31 +23,47 @@ class ProductsAPITestCase(APITestCase):
         self.product3 = Products.objects.create(name='Something from Star Wars', price=800, universe='Other',
                                                 owner=self.user2)
 
+        UserProductRelation.objects.create(user=self.user1, product=self.product3, like=True, rate=4)
+
     def test_get(self):
         url = reverse('products-list')
         response = self.client.get(url)
-        expected_data = ProductsSerializer([self.product1, self.product2, self.product3], many=True).data
+        products = Products.objects.all().annotate(
+        likes_count=Count(Case(When(userproductrelation__like=True, then=1))),
+        rating=Avg('userproductrelation__rate')).order_by('id')
+        expected_data = ProductsSerializer(products, many=True).data
         self.assertEqual(response.data, expected_data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(expected_data[2]['likes_count'], 1)
+        self.assertEqual(expected_data[2]['rating'], '4.00')
 
     def test_get_filter(self):
         url = reverse('products-list')
         response = self.client.get(url, data={'universe': 'LOTR'})
-        expected_data = ProductsSerializer([self.product2], many=True).data
+        products = Products.objects.filter(id__in=[self.product2.id]).annotate(
+            likes_count=Count(Case(When(userproductrelation__like=True, then=1))),
+            rating=Avg('userproductrelation__rate')).order_by('id')
+        expected_data = ProductsSerializer(products, many=True).data
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, expected_data)
 
     def test_get_search(self):
         url = reverse('products-list')
         response = self.client.get(url, data={'search': 'Star Wars'})
-        expected_data = ProductsSerializer([self.product1, self.product3], many=True).data
+        products = Products.objects.filter(id__in=[self.product1.id, self.product3.id]).annotate(
+            likes_count=Count(Case(When(userproductrelation__like=True, then=1))),
+            rating=Avg('userproductrelation__rate')).order_by('id')
+        expected_data = ProductsSerializer(products, many=True).data
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, expected_data)
 
     def test_get_ordering(self):
         url = reverse('products-list')
         response = self.client.get(url, data={'ordering': 'price'})
-        expected_data = ProductsSerializer([self.product1, self.product3, self.product2], many=True).data
+        products = Products.objects.all().annotate(
+            likes_count=Count(Case(When(userproductrelation__like=True, then=1))),
+            rating=Avg('userproductrelation__rate')).order_by('price')
+        expected_data = ProductsSerializer(products, many=True).data
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, expected_data)
 

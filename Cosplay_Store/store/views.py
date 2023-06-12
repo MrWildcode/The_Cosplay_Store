@@ -1,3 +1,4 @@
+from django.db.models import Count, Case, When, Avg
 from django.shortcuts import render
 from rest_framework import mixins
 from rest_framework.filters import SearchFilter, OrderingFilter
@@ -12,7 +13,10 @@ from store.tests.permissions import IsOwnerOrStaffOrReadOnly
 
 
 class ProductsViewSet(ModelViewSet):
-    queryset = Products.objects.all()
+    queryset = Products.objects.all().annotate(
+        likes_count=Count(Case(When(userproductrelation__like=True, then=1))),
+        rating=Avg('userproductrelation__rate')).order_by('id')
+
     serializer_class = ProductsSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['universe']
@@ -26,8 +30,10 @@ class ProductsViewSet(ModelViewSet):
         serializer.validated_data['owner'] = self.request.user
         serializer.save()
 
+
 def oauth(request):
     return render(request, 'oauth.html')
+
 
 class UserProductRelationViewSet(mixins.UpdateModelMixin, GenericViewSet):
     queryset = UserProductRelation.objects.all()
@@ -39,5 +45,3 @@ class UserProductRelationViewSet(mixins.UpdateModelMixin, GenericViewSet):
         obj, _ = UserProductRelation.objects.get_or_create(user=self.request.user,
                                                            product_id=self.kwargs['product'])
         return obj
-
-
