@@ -5,7 +5,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from store.models import Products
+from store.models import Products, UserProductRelation
 from store.serializers import ProductsSerializer
 
 
@@ -21,7 +21,6 @@ class ProductsAPITestCase(APITestCase):
                                                 owner=self.user1)
         self.product3 = Products.objects.create(name='Something from Star Wars', price=800, universe='Other',
                                                 owner=self.user2)
-
 
     def test_get(self):
         url = reverse('products-list')
@@ -50,7 +49,6 @@ class ProductsAPITestCase(APITestCase):
         expected_data = ProductsSerializer([self.product1, self.product3, self.product2], many=True).data
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, expected_data)
-
 
     def test_create(self):
         url = reverse('products-list')
@@ -120,4 +118,46 @@ class ProductsAPITestCase(APITestCase):
         self.assertEqual(2, Products.objects.count())
 
 
+class ProductRelationTestCase(APITestCase):
+    def setUp(self):
+        self.user1 = User.objects.create(username='testuser1')
+        self.user2 = User.objects.create(username='testuser2')
 
+        self.product1 = Products.objects.create(name='testproduct1', price=500, universe='Star Wars')
+        self.product2 = Products.objects.create(name='testproduct2', price=900, universe='LOTR')
+
+    def test_like(self):
+        url = reverse('userproductrelation-detail', args=(self.product1.id,))
+        data = {
+            'like': True
+        }
+        json_data = json.dumps(data)
+        self.client.force_login(self.user1)
+        response = self.client.patch(url, json_data, content_type='application/json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        relation_updated = UserProductRelation.objects.get(user=self.user1, product=self.product1)
+        self.assertTrue(relation_updated.like)
+
+    def in_cart(self):
+        url = reverse('userproductrelation-detail', args=(self.product1.id,))
+        data = {
+            'in_cart': True
+        }
+        json_data = json.dumps(data)
+        self.client.force_login(self.user1)
+        response = self.client.patch(url, json_data, content_type='application/json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(UserProductRelation.objects.get(user=self.user1,
+                                                        product=self.product1).in_cart)
+
+    def test_rate(self):
+        url = reverse('userproductrelation-detail', args=(self.product2.id,))
+        data = {
+            'rate': 4
+        }
+        json_data = json.dumps(data)
+        self.client.force_login(self.user2)
+        response = self.client.patch(url, json_data, content_type='application/json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(UserProductRelation.objects.get(user=self.user2,
+                                                        product=self.product2).rate)

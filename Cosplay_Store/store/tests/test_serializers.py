@@ -18,11 +18,15 @@ class ProductsSerializerTestCase(APITestCase):
              'name': 'testproduct1',
              'price': '500.00',
              'universe': 'Star Wars',
-             'owner': self.user1.id},
+             'owner': self.user1.id,
+             'watchers': []},
             {'id': self.product2.id,
              'name': 'testproduct2',
              'price': '800.00',
              'universe': 'LOTR',
-             'owner': self.user1.id},
+             'owner': self.user1.id,
+             'watchers': []},
             ]
+        print(f'EXPECTED DATA {expected_data}')
+        print(f'DATA {data}')
         self.assertEqual(expected_data, data)
