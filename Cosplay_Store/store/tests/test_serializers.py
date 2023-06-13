@@ -17,7 +17,10 @@ class ProductsSerializerTestCase(APITestCase):
 
         UserProductRelation.objects.create(user=self.user1, product = self.product1, like=True, rate=3)
         UserProductRelation.objects.create(user=self.user2, product=self.product1, like=True, rate=4)
-        UserProductRelation.objects.create(user=self.user3, product=self.product1, like=True)
+        user_product3 = UserProductRelation.objects.create(user=self.user3, product=self.product1, like=True)
+        user_product3.rate = 5
+        user_product3.save()
+
 
         UserProductRelation.objects.create(user=self.user1, product = self.product2, like=True)
         UserProductRelation.objects.create(user=self.user2, product=self.product2, like=True, rate=2)
@@ -48,7 +51,7 @@ class ProductsSerializerTestCase(APITestCase):
                  },
              ],
              'likes_count': 3,
-             'rating': '3.50'},
+             'rating': '4.00'},
             {'id': self.product2.id,
              'name': 'testproduct2',
              'price': '800.00',
@@ -71,4 +74,4 @@ class ProductsSerializerTestCase(APITestCase):
              'likes_count': 2,
              'rating': '3.00'},
             ]
-        self.assertEqual(expected_data[0], data[0])
+        self.assertEqual(expected_data, data)
